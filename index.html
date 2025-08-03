@@ -6,131 +6,170 @@
   <title>HATU - Hỏi Đáp Thiên Văn</title>
   <style>
     body {
-      background-color: #0d0d0d;
-      color: #ffffff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #00bcd4;
-      text-align: center;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .question-box, .answer-box {
-      background: #1a1a1a;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #00bcd4;
-      position: relative;
-    }
-    .input-field, textarea {
-      width: 97%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-      background: #333;
-      color: #fff;
-    }
-    .button {
-      background-color: #00bcd4;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .button:hover {
-      background-color: #008ba3;
-    }
-    .qa h2 {
-      color: #ffc107;
-      margin-bottom: 15px;
-    }
-    .qa h3 {
-      color: #f0f0f0;
-      margin: 6px 0;
-    }
-    .meta {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 12px;
-      color: #aaa;
-    }
-    .replies {
-      margin-left: 20px;
-      margin-top: 10px;
-    }
-    .reply-item {
-      background: #222;
-      padding: 8px;
-      margin-bottom: 8px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .reply-btn {
-      background: transparent;
-      border: 1px solid #00bcd4;
-      color: #00bcd4;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .reply-btn:hover {
-      background: #00bcd4;
-      color: #000;
-    }
-    #replyPopup {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 90%;
-      max-width: 400px;
-      transform: translate(-50%, -50%);
-      background: #222;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 15px #00bcd4;
-      z-index: 9999;
-    }
-    #replyPopup h3 {
-      margin-top: 0;
-      color: #00bcd4;
-    }
-    #replyPopup label {
-      font-size: 14px;
-      margin-top: 10px;
-      display: block;
-    }
-    #replyPopup input, #replyPopup textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #333;
-      color: #fff;
-    }
-    #replyPopup .button {
-      margin-top: 15px;
-      width: 100%;
-    }
-    #overlay {
-      display: none;
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.6);
-      z-index: 9998;
-    }
+  background-color: #0b0c10;
+  color: #ffffff;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+h1 {
+  color: #00fff7;
+  text-align: center;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px #00bcd4, 0 0 20px #00bcd4;
+}
+
+h2 {
+  text-align: center;
+  color: #ffc107;
+  margin-bottom: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.question-box, .answer-box {
+  background: #141414;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.question-box:hover, .answer-box:hover {
+  transform: scale(1.01);
+}
+
+.input-field, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #1f1f1f;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.button {
+  background-color: #00bcd4;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
+  font-weight: bold;
+  font-size: 15px;
+  transition: background 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0097a7;
+}
+
+.qa h3 {
+  color: #00fff7;
+  margin-top: 0;
+}
+
+.meta {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  font-size: 12px;
+  color: #aaa;
+  text-align: right;
+}
+
+.replies {
+  margin-top: 15px;
+  padding-left: 10px;
+  border-left: 3px solid #00bcd4;
+}
+
+.reply-item {
+  background: #232323;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.reply-btn {
+  background: transparent;
+  border: 1px solid #00bcd4;
+  color: #00bcd4;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.reply-btn:hover {
+  background: #00bcd4;
+  color: #000;
+}
+
+#replyPopup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  max-width: 400px;
+  transform: translate(-50%, -50%);
+  background: #1c1c1c;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 0 20px #00bcd4;
+  z-index: 1000;
+}
+
+#replyPopup h3 {
+  margin-top: 0;
+  color: #00bcd4;
+  text-align: center;
+}
+
+#replyPopup label {
+  font-size: 14px;
+  margin-top: 12px;
+  display: block;
+}
+
+#replyPopup input, #replyPopup textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: none;
+  background: #2a2a2a;
+  color: #fff;
+}
+
+#replyPopup .button {
+  margin-top: 16px;
+  width: 100%;
+}
+
+#overlay {
+  display: none;
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.6);
+  z-index: 999;
+}
+
   </style>
 </head>
 <body>
@@ -268,4 +307,5 @@
 
 </body>
 </html>
+
 
