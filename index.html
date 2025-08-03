@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HATU - Hỏi Đáp Thiên Văn</title>
   <style>
     body {
@@ -26,6 +26,7 @@
       margin-bottom: 20px;
       border-radius: 12px;
       box-shadow: 0 0 10px #00bcd4;
+      position: relative;
     }
     .input-field, textarea {
       width: 100%;
@@ -54,6 +55,81 @@
     }
     .qa h3 {
       color: #f0f0f0;
+      margin: 6px 0;
+    }
+    .meta {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .replies {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+    .reply-item {
+      background: #222;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .reply-btn {
+      background: transparent;
+      border: 1px solid #00bcd4;
+      color: #00bcd4;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .reply-btn:hover {
+      background: #00bcd4;
+      color: #000;
+    }
+    #replyPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 90%;
+      max-width: 400px;
+      transform: translate(-50%, -50%);
+      background: #222;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 15px #00bcd4;
+      z-index: 9999;
+    }
+    #replyPopup h3 {
+      margin-top: 0;
+      color: #00bcd4;
+    }
+    #replyPopup label {
+      font-size: 14px;
+      margin-top: 10px;
+      display: block;
+    }
+    #replyPopup input, #replyPopup textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: none;
+      background: #333;
+      color: #fff;
+    }
+    #replyPopup .button {
+      margin-top: 15px;
+      width: 100%;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6);
+      z-index: 9998;
     }
   </style>
 </head>
@@ -63,7 +139,7 @@
 
     <div class="question-box">
       <h2>Đặt câu hỏi</h2>
-      <input type="text" class="input-field" id="username" placeholder="Tên của bạn (bắt buộc)">
+      <input type="text" class="input-field" id="username" placeholder="Tên của bạn (bắt buộc)" />
       <textarea rows="4" id="question" class="input-field" placeholder="Nhập câu hỏi của bạn về thiên văn..."></textarea>
       <button class="button" onclick="submitQuestion()">Gửi câu hỏi</button>
     </div>
@@ -74,88 +150,121 @@
     </div>
   </div>
 
+  <div id="overlay"></div>
+
+  <div id="replyPopup">
+    <h3>Trả lời câu hỏi</h3>
+    <p><b>Câu hỏi:</b> <span id="replyQuestionText"></span></p>
+    <label for="replyName">Tên của bạn (bắt buộc):</label>
+    <input type="text" id="replyName" placeholder="Nhập tên của bạn" />
+    <label for="replyText">Câu trả lời (bắt buộc):</label>
+    <textarea id="replyText" rows="4" placeholder="Nhập câu trả lời"></textarea>
+    <button class="button" onclick="submitReply()">Gửi trả lời</button>
+    <button class="button" style="background:#555;margin-top:8px;" onclick="closeReplyPopup()">Hủy</button>
+  </div>
+
+<!-- _________________________________ -->
+
   <script>
-    const sheetID = '1_9eNkQEo7EnAYcs9LqQQ9U232PUeylmjrKNv_eGOUX0';
-    const sheetName = 'Câu trả lời biểu mẫu 1'; // Đổi tên nếu bạn đặt lại
-    const sheetURL = `https://opensheet.elk.sh/${sheetID}/${sheetName}`;
-    const qaSection = document.getElementById('qa-section');
-    const questions = [];
+  const sheetID = '18cFMlSc7dlwHNZlUQ5y7BMRYrlniMjRQTgCeLXu72T4';
+  const sheetURL = `https://opensheet.elk.sh/${sheetID}/Sheet1`;
 
-    async function submitQuestion() {
-      const username = document.getElementById('username').value.trim();
-      const question = document.getElementById('question').value.trim();
-      if (!username || !question) {
-        alert("Vui lòng nhập đầy đủ thông tin!");
-        return;
-      }
+  const formURL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSdDuE4ErfWKhpntFUftupOLcCSlgCnoONIK8K84yWaKdj53rg/formResponse';
+  const entry = {
+    name: 'entry.1180938473',
+    question: 'entry.1168602063',
+    answer: 'entry.1458830104'
+  };
 
-      // Gửi lên Google Form
-      const formURL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLScMnnE_qLihGp_8KKnUglc1aap2mLtlDO96aABi323ua8FYQw/formResponse';
-      const formData = new FormData();
-      formData.append('entry.627679237', username); // Tên
-      formData.append('entry.598787276', question); // Câu hỏi
+  const qaSection = document.getElementById('qa-section');
+  const replyPopup = document.getElementById('replyPopup');
+  const overlay = document.getElementById('overlay');
+  let currentQuestion = '';
+  let dataItems = [];
 
-      try {
-        await fetch(formURL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: formData
-        });
-
-        alert("🎉 Câu hỏi của bạn đã được gửi!");
-        document.getElementById('username').value = '';
-        document.getElementById('question').value = '';
-
-        // Tự thêm vào giao diện mà không cần đợi cập nhật sheet
-        questions.unshift({ username, question, answer: '' });
-        renderQuestions(questions);
-      } catch (err) {
-        alert("Đã xảy ra lỗi khi gửi câu hỏi.");
-        console.error(err);
-      }
+  async function loadData(){
+    try {
+      const res = await fetch(sheetURL);
+      const arr = await res.json();
+      // map dữ liệu
+      dataItems = arr.map(row => ({
+        ts: new Date(row.Timestamp),
+        name: row['Tên'] || 'Ẩn danh',
+        question: row['Câu hỏi'] || '',
+        answer: row['Câu trả lời'] || ''
+      })).filter(x => x.question).sort((a,b) => b.ts - a.ts);
+      renderList();
+    } catch(e){
+      console.error('Failed to load sheet:', e);
     }
+  }
 
-    function renderQuestions(data) {
-      const oldCards = document.querySelectorAll('.answer-box');
-      oldCards.forEach(card => card.remove());
-
-      data.forEach(q => {
-        const box = document.createElement('div');
-        box.className = 'answer-box';
-        box.innerHTML = `
-          <h3>${q.username} hỏi:</h3>
-          <p>${q.question}</p>
-          <hr>
-          <p><i>${q.answer && q.answer.trim() !== '' ? q.answer : 'Chờ trả lời...'}</i></p>
-        `;
-        qaSection.appendChild(box);
+  function renderList(){
+    qaSection.innerHTML = '<h2>Các câu hỏi đã gửi:</h2>';
+    const grouped = {};
+    dataItems.forEach(item => {
+      const key = item.question;
+      if (!grouped[key]) grouped[key] = { ...item, answers: [] };
+      if (item.answer) grouped[key].answers.push({ name: item.name, answer: item.answer });
+    });
+    Object.values(grouped).forEach(q => {
+      const card = document.createElement('div');
+      card.className = 'answer-box';
+      const dateStr = q.ts.toLocaleString('vi-VN', { dateStyle:'short', timeStyle:'short' });
+      const count = q.answers.length;
+      let answersHtml = '';
+      q.answers.forEach(a => {
+        answersHtml += `<div class="reply-item"><b>${a.name} trả lời:</b><br>${escapeHtml(a.answer)}</div>`;
       });
-    }
+      card.innerHTML = `
+        <div class="meta"> ${dateStr}<br>💬 ${count} câu trả lời</div>
+        <h3>${escapeHtml(q.name)} hỏi:</h3><p>${escapeHtml(q.question)}</p>
+        <div class="replies">${answersHtml}</div>
+        <button class="reply-btn" onclick="openReply('${escapeHtml(q.question)}')">Trả lời</button>
+      `;
+      qaSection.appendChild(card);
+    });
+  }
 
-    async function fetchSheetQuestions() {
-      try {
-        const res = await fetch(sheetURL);
-        const data = await res.json();
+  function submitQuestion(){
+    const nm = document.getElementById('username').value.trim();
+    const qs = document.getElementById('question').value.trim();
+    if (!nm || !qs) return alert('Nhập đầy đủ tên & câu hỏi!');
+    const fd = new FormData();
+    fd.append(entry.name, nm);
+    fd.append(entry.question, qs);
+    fd.append(entry.answer, '');
+    fetch(formURL, { method:'POST', mode:'no-cors', body:fd })
+      .then(() => { alert('Gửi câu hỏi thành công!'); document.getElementById('username').value=''; document.getElementById('question').value=''; loadData(); });
+  }
 
-        if (!Array.isArray(data)) {
-          console.error('Dữ liệu từ Sheet không hợp lệ:', data);
-          return;
-        }
+  function openReply(questionText){
+    currentQuestion = questionText;
+    document.getElementById('replyQuestionText').textContent = questionText;
+    replyPopup.style.display = 'block'; overlay.style.display = 'block';
+  }
+  function closeReplyPopup(){
+    replyPopup.style.display = 'none'; overlay.style.display = 'none';
+    document.getElementById('replyName').value = '';
+    document.getElementById('replyText').value = '';
+  }
 
-        const sheetQuestions = data.map(item => ({
-          username: item.Tên || 'Ẩn danh',
-          question: item['Câu hỏi'] || '',
-          answer: item['Trả lời'] || ''
-        })).reverse();
+  function submitReply(){
+    const nm = document.getElementById('replyName').value.trim();
+    const ans = document.getElementById('replyText').value.trim();
+    if (!nm || !ans) return alert('Nhập đầy đủ tên & câu trả lời!');
+    const fd = new FormData();
+    fd.append(entry.name, nm);
+    fd.append(entry.question, currentQuestion);
+    fd.append(entry.answer, ans);
+    fetch(formURL, { method:'POST', mode:'no-cors', body:fd })
+      .then(() => { alert('Gửi trả lời thành công!'); closeReplyPopup(); loadData(); });
+  }
 
-        questions.push(...sheetQuestions);
-        renderQuestions(questions);
-      } catch (err) {
-        console.error('Không thể tải dữ liệu từ Google Sheet:', err);
-      }
-    }
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-    fetchSheetQuestions();
-  </script>
+  document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
 </body>
 </html>
