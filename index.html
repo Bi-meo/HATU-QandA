@@ -169,15 +169,111 @@ h2 {
   background: rgba(0,0,0,0.6);
   z-index: 999;
 }
+
+
+/* ===== Giao diện modal auth ===== */
+  .auth-trigger {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: #00bcd4;
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 100;
+  }
+  .auth-trigger:hover { background: #0097a7; }
+
+  #authModal {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #141414;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
+    width: 90%;
+    max-width: 400px;
+    z-index: 200;
+  }
+  #authModal h2 {
+    color: #00fff7;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  #authModal input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: #1f1f1f;
+    color: #fff;
+    font-size: 15px;
+  }
+  #authModal .button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 8px;
+    background: #00bcd4;
+    color: #000;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+  #authModal .button:hover { background: #0097a7; }
+  #authMsg {
+    margin-top: 10px;
+    text-align: center;
+    font-weight: bold;
+  }
+  #authOverlay {
+    display: none;
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.6);
+    z-index: 150;
+  }
+
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  emailjs.init('fsGfy7kW0Wo72Vsmn'); // Thay bằng public key của bạn
+</script>
+
 </head>
 <body>
+  <div class="auth-trigger" id="authTrigger">Đăng ký</div>
+  <div id="authOverlay"></div>
+  <div id="authModal">
+    <input type="email" id="authEmail" placeholder="Email (bắt buộc khi đăng ký)" />
+    <div id="verifySection" style="display:none;">
+      <input type="text" id="verifyCodeInput" placeholder="Nhập mã xác nhận từ email" />
+      <button class="button" onclick="verifyCode()">Xác nhận mã</button>
+    </div>
+
+    <h2>🔐 Đăng ký / Đăng nhập</h2>
+    <input type="text" id="authUsername" placeholder="Tên đăng nhập" />
+    <input type="password" id="authPassword" placeholder="Mật khẩu" />
+    <button class="button" onclick="handleAuth('register')">Đăng ký</button>
+    <button class="button" onclick="handleAuth('login')">Đăng nhập</button>
+    <div id="authMsg"></div>
+  </div>
+
+
   <div class="container">
     <h1>🪐 HATU - Hỏi Đáp Thiên Văn</h1>
 
     <div class="question-box">
       <h2>Đặt câu hỏi</h2>
-      <input type="text" class="input-field" id="username" placeholder="Tên của bạn (bắt buộc)" />
+      <!-- <input type="text" class="input-field" id="username" placeholder="Tên của bạn (bắt buộc)" /> -->
       <textarea rows="4" id="question" class="input-field" placeholder="Nhập câu hỏi của bạn về thiên văn..."></textarea>
       <button class="button" onclick="submitQuestion()">Gửi câu hỏi</button>
     </div>
@@ -193,8 +289,8 @@ h2 {
   <div id="replyPopup">
     <h3>Trả lời câu hỏi</h3>
     <p><b>Câu hỏi:</b> <span id="replyQuestionText"></span></p>
-    <label for="replyName">Tên của bạn (bắt buộc):</label>
-    <input type="text" id="replyName" placeholder="Nhập tên của bạn" />
+    <!-- <label for="replyName">Tên của bạn (bắt buộc):</label> -->
+    <!-- <input type="text" id="replyName" placeholder="Nhập tên của bạn" /> -->
     <label for="replyText">Câu trả lời (bắt buộc):</label>
     <textarea id="replyText" rows="4" placeholder="Nhập câu trả lời"></textarea>
     <button class="button" onclick="submitReply()">Gửi trả lời</button>
@@ -203,7 +299,165 @@ h2 {
 
 <!-- _________________________________ -->
 
-  <script>
+<script>
+  
+  // ===== Google Form & OpenSheet config =====
+    const FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSdm1l8ZV3BWGXKjQnB2kR52CfGbeFhG68YBIKlo3Zz-G6kM8w/formResponse";
+    const entry_1 = {
+      action: "entry.2140278045",
+      username: "entry.2072529279",
+      password: "entry.24295040"
+    };
+    const sheetURL_1 = "https://opensheet.elk.sh/17PfxmKabBRFv9DInqPU82-Kdbytnidp77SemAvhcao8/Sheet1";
+
+    // ===== Auth modal control =====
+    const authTrigger = document.getElementById("authTrigger");
+    const authModal = document.getElementById("authModal");
+    const authOverlay = document.getElementById("authOverlay");
+
+    authTrigger.addEventListener("click", () => {
+      if (localStorage.getItem("loggedUser")) {
+        logout();
+      } else openModal();
+    });
+
+    authOverlay.addEventListener("click", closeModal);
+
+    function openModal() {
+      authModal.style.display = "block";
+      authOverlay.style.display = "block";
+    }
+    function closeModal() {
+      authModal.style.display = "none";
+      authOverlay.style.display = "none";
+    }
+
+    function showAuthMsg(msg, success) {
+      const el = document.getElementById("authMsg");
+      el.textContent = msg;
+      el.style.color = success ? "#00ff99" : "#ff6666";
+    }
+
+
+
+    let verificationCode = '';
+
+
+    function handleAuth(action) {
+      const u = document.getElementById("authUsername").value.trim();
+      const p = document.getElementById("authPassword").value.trim();
+      const e = document.getElementById("authEmail").value.trim();
+      if (!u || !p || (action === "register" && !e)) return showAuthMsg("Nhập đầy đủ thông tin!", false);
+
+      fetch(sheetURL_1)
+        .then(r => r.json())
+        .then(data => {
+          const existsUser = data.some(r => r["Tên người dùng"] === u);
+          const found = data.find(r => r["Tên người dùng"] === u && r["Mật khẩu"] === p);
+          if (action === "register") {
+            if (existsUser) {
+              showAuthMsg("Tài khoản đã tồn tại!", false);
+            } else {
+              verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+              const now = new Date();
+              const expireTime = new Date(now.getTime() + 15 * 60000); // 15 phút
+              const timeStr = expireTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+              emailjs.send("service_58pas0h", "template_st4q8vb", {
+                email: e,
+                passcode: verificationCode,
+                time: timeStr
+              }).then(() => {
+                showAuthMsg("Mã xác nhận đã gửi vào email!", true);
+                document.getElementById("verifySection").style.display = "block";
+              }).catch(() => {
+                showAuthMsg("Lỗi khi gửi email!", false);
+              });
+
+            }
+          } else {
+            if (found) {
+              localStorage.setItem("loggedUser", u);
+              showAuthMsg("Đăng nhập thành công ✅", true);
+              updateTrigger();
+              setTimeout(closeModal, 1000);
+            } else {
+              showAuthMsg("Sai tài khoản hoặc mật khẩu!", false);
+            }
+          }
+        });
+    }
+
+    function verifyCode() {
+      const codeInput = document.getElementById("verifyCodeInput").value.trim();
+      if (codeInput === verificationCode) {
+        const u = document.getElementById("authUsername").value.trim();
+        const p = document.getElementById("authPassword").value.trim();
+        sendToForm("Đăng ký", u, p, () => {
+          localStorage.setItem("loggedUser", u);
+          updateTrigger();
+          closeModal();
+          showAuthMsg("Đăng ký thành công ✅", true);
+        });
+      } else {
+        showAuthMsg("Mã xác nhận không đúng!", false);
+      }
+    }
+
+
+
+    function sendToForm(actionLabel, user, pass, cb) {
+      const fd = new FormData();
+      fd.append(entry_1.action, actionLabel);
+      fd.append(entry_1.username, user);
+      fd.append(entry_1.password, pass);
+      fetch(FORM_URL, { method: "POST", mode: "no-cors", body: fd })
+        .then(() => {
+          showAuthMsg("Gửi thành công ✅", true);
+          if (cb) cb();
+        });
+    }
+
+    function updateTrigger() {
+      const u = localStorage.getItem("loggedUser");
+      authTrigger.textContent = u ? u : "Đăng ký";
+      authTrigger.style.background = u ? "#00ff99" : "#00bcd4";
+
+      // Ẩn/hiện phần gửi câu hỏi
+      document.querySelector(".question-box").style.display = u ? "block" : "none";
+
+      // Gắn thông báo thay thế nếu chưa đăng nhập
+      if (!u) {
+        const placeholder = document.getElementById("loginNotice");
+        if (!placeholder) {
+          const notice = document.createElement("div");
+          notice.id = "loginNotice";
+          notice.style.color = "#ff6666";
+          notice.style.textAlign = "center";
+          notice.style.margin = "20px 0";
+          notice.innerHTML = "🔒 Bạn cần đăng nhập để thực hiện tính năng này";
+          const container = document.querySelector(".container");
+          container.insertBefore(notice, document.querySelector(".qa"));
+        }
+      } else {
+        const placeholder = document.getElementById("loginNotice");
+        if (placeholder) placeholder.remove();
+      }
+    }
+
+
+    function logout() {
+      localStorage.removeItem("loggedUser");
+      updateTrigger();
+    }
+
+    updateTrigger();
+  
+
+
+
+  // <!-- _________________________________ -->
+  
   const sheetID = '18cFMlSc7dlwHNZlUQ5y7BMRYrlniMjRQTgCeLXu72T4';
   const sheetURL = `https://opensheet.elk.sh/${sheetID}/Sheet1`;
 
@@ -288,22 +542,37 @@ h2 {
   }
 
   function submitQuestion(){
-    const nm = document.getElementById('username').value.trim();
+    const loggedUser = localStorage.getItem("loggedUser");
+    if (!loggedUser) {
+      alert("Bạn cần đăng nhập để thực hiện tính năng này");
+      return;
+    }
     const qs = document.getElementById('question').value.trim();
-    if (!nm || !qs) return alert('Nhập đầy đủ tên & câu hỏi!');
+    if (!qs) return alert('Vui lòng nhập câu hỏi!');
     const fd = new FormData();
-    fd.append(entry.name, nm);
+    fd.append(entry.name, loggedUser);
     fd.append(entry.question, qs);
     fd.append(entry.answer, '');
     fetch(formURL, { method:'POST', mode:'no-cors', body:fd })
-      .then(() => { alert('Gửi câu hỏi thành công!'); document.getElementById('username').value=''; document.getElementById('question').value=''; loadData(); });
+      .then(() => { 
+        alert('Gửi câu hỏi thành công!'); 
+        document.getElementById('question').value=''; 
+        loadData(); 
+      });
   }
 
+
   function openReply(questionText){
+    const loggedUser = localStorage.getItem("loggedUser");
+    if (!loggedUser) {
+      alert("Bạn cần đăng nhập để thực hiện tính năng này");
+      return;
+    }
     currentQuestion = questionText;
     document.getElementById('replyQuestionText').textContent = questionText;
     replyPopup.style.display = 'block'; overlay.style.display = 'block';
   }
+
   function closeReplyPopup(){
     replyPopup.style.display = 'none'; overlay.style.display = 'none';
     document.getElementById('replyName').value = '';
@@ -311,20 +580,33 @@ h2 {
   }
 
   function submitReply(){
-    const nm = document.getElementById('replyName').value.trim();
+    const loggedUser = localStorage.getItem("loggedUser");
+    if (!loggedUser) {
+      alert("Bạn cần đăng nhập để thực hiện tính năng này");
+      return;
+    }
     const ans = document.getElementById('replyText').value.trim();
-    if (!nm || !ans) return alert('Nhập đầy đủ tên & câu trả lời!');
+    if (!ans) return alert('Nhập câu trả lời!');
     const fd = new FormData();
-    fd.append(entry.name, nm);
+    fd.append(entry.name, loggedUser);
     fd.append(entry.question, currentQuestion);
     fd.append(entry.answer, ans);
     fetch(formURL, { method:'POST', mode:'no-cors', body:fd })
-      .then(() => { alert('Gửi trả lời thành công!'); closeReplyPopup(); loadData(); });
+      .then(() => { 
+        alert('Gửi trả lời thành công!'); 
+        closeReplyPopup(); 
+        loadData(); 
+      });
   }
+
 
   function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-  document.addEventListener('DOMContentLoaded', loadData);
+  document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  updateTrigger(); // đảm bảo cập nhật UI đúng sau khi reload
+});
+
 </script>
 
 </body>
